@@ -6,10 +6,13 @@ namespace lve
 {
     class FirstApp
     {
-        public:
+       public:
        static constexpr int WIDTH = 800;
        static constexpr int HEIGHT = 600;
-
-       void run();      
+       FirstApp();
+       ~FirstApp();
+       void run();     
+    private:
+        LveWindow lveWindow {WIDTH,HEIGHT,"vulkan"};
     };
 }
