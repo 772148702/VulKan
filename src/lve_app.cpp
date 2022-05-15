@@ -1,11 +1,12 @@
 #include "lve_app.hpp"
-#include <GLFW/glfw3.h>
+#include<GLFW/glfw3.h>
 
 using namespace lve;
 
 void FirstApp::run()
 {
-	while (lveWindow.window)
+	
+	while (!glfwWindowShouldClose(lveWindow.window))
 	{
         glfwPollEvents();
 	}

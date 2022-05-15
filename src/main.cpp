@@ -1,10 +1,12 @@
 #include <iostream>
 #include <stdexcept>
 #include "lve_app.hpp"
-int main()
+#include<filesystem>
+int main(int  argc, char* argv[])
 {
-
+    std::cout << "Current working directory: " << std::filesystem::current_path() << '\n';
     lve::FirstApp app;
+
     try
     {
         app.run();
