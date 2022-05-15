@@ -10,15 +10,19 @@ namespace lve
    
     class LveWindow 
     {
+        friend class FirstApp;
         public:
         LveWindow(int w,int h,std::string name);
         ~LveWindow();
         LveWindow(const LveWindow&) = delete;
         LveWindow operator =(const LveWindow &) = delete;
         void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
+    private:
+        static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
         void initWindow();
-        const int width;
-        const int height;
+        int width;
+        int height;
+        bool framebufferResized = true;
         std::string windowName;
         GLFWwindow * window;
     };

@@ -7,6 +7,8 @@ namespace lve
 {
     class FirstApp
     {
+
+
        public:
        FirstApp();
        ~FirstApp();
@@ -14,6 +16,7 @@ namespace lve
        static constexpr int HEIGHT = 600;
 
        void run();
+      
        private:
            LveWindow lveWindow{ WIDTH,HEIGHT,"Hello Vulakn" };
 

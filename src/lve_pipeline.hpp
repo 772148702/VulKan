@@ -35,7 +35,7 @@ namespace lve
         private:
         static std::vector<char> readFile(const std::string & filepath);
         void createGraphicPipeline(const std::string& verFilePath, const std::string & fragFilePath,const PipelineConfigInfo& pipelineConfigureInfo);
-
+        void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);     
 
          LveDevice& lveDevice;
          VkPipeline graphicsPipeline;
