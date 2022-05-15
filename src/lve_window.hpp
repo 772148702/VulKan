@@ -15,7 +15,7 @@ namespace lve
         ~LveWindow();
         LveWindow(const LveWindow&) = delete;
         LveWindow operator =(const LveWindow &) = delete;
-
+        void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
         void initWindow();
         const int width;
         const int height;

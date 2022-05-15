@@ -1,4 +1,5 @@
 #include "lve_window.hpp"
+#include <stdexcept>
 using namespace lve;
 
 
@@ -13,7 +14,14 @@ using namespace lve;
       {
       }
 
-     void LveWindow::initWindow()
+      void lve::LveWindow::createWindowSurface(VkInstance instance, VkSurfaceKHR* surface)
+      {
+          if (glfwCreateWindowSurface(instance, window, nullptr, surface) != VK_SUCCESS) {
+              throw std::runtime_error("failed to craete window surface");
+          }
+      }
+
+      void LveWindow::initWindow()
      {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API,GLFW_NO_API);
