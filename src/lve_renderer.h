@@ -11,7 +11,6 @@
 namespace lve {
 	class LveRenderer
 	{
-	public:
 		LveRenderer(LveWindow& window, LveDevice& device);
 		~LveRenderer();
 		LveRenderer(const LveRenderer&) = delete;
@@ -20,7 +19,7 @@ namespace lve {
 		VkRenderPass getSwapChainRenderPass() const { return lveSwapChain->getRenderPass(); }
 		float getAspectRatio() const { return lveSwapChain->extentAspectRatio(); }
 		bool isFrameInProgress() const { return isFrameStarted; }
-
+		
 		VkCommandBuffer getCurrentCommandBuffer() const {
 			assert(isFrameStarted && "Cannot get command buffer when frame not in progress");
 			return commandBuffers[currentFrameIndex];

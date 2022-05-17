@@ -30,7 +30,9 @@ namespace lve
 		VkExtent2D getSwapChainExtent() { return swapChainExtent; }
 		uint32_t width() { return swapChainExtent.width; }
 		uint32_t height() { return swapChainExtent.height; }
-
+		float extentAspectRatio() {
+			return static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height);
+		}
 		VkFormat findDepthFormat();
 
 		VkResult acquireNextImage(uint32_t* imageIndex);
@@ -51,10 +53,8 @@ namespace lve
 		void createSyncObjects();
 
 		// Helper functions
-		VkSurfaceFormatKHR chooseSwapSurfaceFormat(
-			const std::vector<VkSurfaceFormatKHR>& availableFormats);
-		VkPresentModeKHR chooseSwapPresentMode(
-			const std::vector<VkPresentModeKHR>& availablePresentModes);
+		VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+		VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 		VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
 		VkFormat swapChainImageFormat;

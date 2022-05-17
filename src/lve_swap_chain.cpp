@@ -235,10 +235,106 @@ namespace lve {
 
 	void LveSwapChain::createFramebuffers()
 	{
+		swapChainFramebuffers.resize(imageCount());
+		for (size_t i = 0; i < imageCount(); i++)
+		{
+			std::array<VkImageView,2> attachments = { swapChainImageViews[i], depthImageViews[i] };
+
+			VkExtent2D swapChainExtent = getSwapChainExtent();
+			VkFramebufferCreateInfo framebufferinfo = {};
+			framebufferinfo.renderPass = renderPass;
+			framebufferinfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferinfo.pAttachments = attachments.data();
+			framebufferinfo.height = swapChainExtent.height;
+			framebufferinfo.width = swapChainExtent.width;
+			framebufferinfo.layers = 1;
+
+			if (vkCreateFramebuffer(device.device(),
+				&framebufferinfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
+			{
+				throw std::runtime_error("failed to create framebuffer");
+			}
+		}
 	}
 
 	void LveSwapChain::createSyncObjects()
 	{
+		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+		inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+
+		VkSemaphoreCreateInfo semaphoreInfo = {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_PROTECTED_SUBMIT_INFO;
+
+		VkFenceCreateInfo fenceInfo = {};
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+			if (vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) !=
+				VK_SUCCESS ||
+				vkCreateSemaphore(device.device(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) !=
+				VK_SUCCESS ||
+				vkCreateFence(device.device(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
+				throw std::runtime_error("failed to create synchronization objects for a frame!");
+			}
+		}
+
+	}
+
+	VkSurfaceFormatKHR LveSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
+	{
+		for (const auto& availableFormat : availableFormats) 
+		{
+			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
+				availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+				return availableFormat;
+			}
+		}
+
+		return availableFormats[0];
+	}
+
+	VkPresentModeKHR LveSwapChain::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
+	{
+		for (const auto& availablePresentMode : availablePresentModes) 
+		{
+			if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) 
+			{
+				std::cout << "Present mode: Mailbox" << std::endl;
+				return availablePresentMode;
+			}
+		}
+
+		// for (const auto &availablePresentMode : availablePresentModes) {
+		//   if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+		//     std::cout << "Present mode: Immediate" << std::endl;
+		//     return availablePresentMode;
+		//   }
+		// }
+
+		std::cout << "Present mode: V-Sync" << std::endl;
+		return VK_PRESENT_MODE_FIFO_KHR;
+	}
+
+	VkExtent2D LveSwapChain::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
+	{
+		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
+		{
+			return capabilities.currentExtent;
+		}
+		else 
+		{
+			VkExtent2D actualExtent = windowExtent;
+			actualExtent.width = std::max(
+				capabilities.minImageExtent.width,
+				std::min(capabilities.maxImageExtent.width, actualExtent.width));
+			actualExtent.height = std::max(
+				capabilities.minImageExtent.height,
+				std::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+			return actualExtent;
+		}
 	}
 
 	LveSwapChain::~LveSwapChain() {
@@ -274,6 +370,15 @@ namespace lve {
 	}
 
 
+
+	VkFormat LveSwapChain::findDepthFormat()
+	{
+		return device.findSupportedFormat
+		(
+			{ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+	}
 
 	VkResult LveSwapChain::acquireNextImage(uint32_t* imageIndex) {
 		vkWaitForFences(
