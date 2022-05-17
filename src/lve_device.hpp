@@ -41,7 +41,7 @@ namespace lve
         VkCommandPool getCommandPool() {return commandPool;}
         VkDevice device() {return device_;}
         VkSurfaceKHR surface() {return surface_;}
-        VkQueue graphicQueue() {return graphicsQueue_;}
+        VkQueue graphicsQueue() {return graphicsQueue_;}
         VkQueue presentQueue() {return presentQueue_;}
 
         SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
