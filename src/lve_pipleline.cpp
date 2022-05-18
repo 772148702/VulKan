@@ -1,42 +1,68 @@
 #include "lve_pipeline.hpp"
-#include "lve_device.hpp"
+
+#include "lve_model.hpp"
+
+// std
+#include <cassert>
 #include <fstream>
-#include <filesystem>
+#include <iostream>
+#include <stdexcept>
 
-namespace lve 
-{
+#ifndef ENGINE_DIR
+#define ENGINE_DIR "../"
+#endif
 
-    LvePipeline::LvePipeline(LveDevice& device,const std::string& verPath, const std::string& fragPath, const PipelineConfigInfo& configInfo):lveDevice(device)
-    {
-        createGraphicPipeline(verPath, fragPath, configInfo);
+namespace lve {
+
+    LvePipeline::LvePipeline(
+        LveDevice& device,
+        const std::string& vertFilepath,
+        const std::string& fragFilepath,
+        const PipelineConfigInfo& configInfo)
+        : lveDevice{ device } {
+        createGraphicsPipeline(vertFilepath, fragFilepath, configInfo);
     }
 
+    LvePipeline::~LvePipeline() {
+        vkDestroyShaderModule(lveDevice.device(), vertShaderModule, nullptr);
+        vkDestroyShaderModule(lveDevice.device(), fragShaderModule, nullptr);
+        vkDestroyPipeline(lveDevice.device(), graphicsPipeline, nullptr);
+    }
 
-    void LvePipeline::createShaderModule(const std::vector<char>& code,VkShaderModule * shaderModule)
-    {
-        VkShaderModuleCreateInfo  creatInfo{};
-        creatInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        creatInfo.codeSize = code.size();
-        creatInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+    std::vector<char> LvePipeline::readFile(const std::string& filepath) {
+        std::string enginePath = ENGINE_DIR + filepath;
+        std::ifstream file{ enginePath, std::ios::ate | std::ios::binary };
 
-        if (vkCreateShaderModule(lveDevice.device(), &creatInfo, nullptr,shaderModule)!= VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create shader module");
+        if (!file.is_open()) {
+            throw std::runtime_error("failed to open file: " + enginePath);
         }
 
-        
+        size_t fileSize = static_cast<size_t>(file.tellg());
+        std::vector<char> buffer(fileSize);
+
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+
+        file.close();
+        return buffer;
     }
 
+    void LvePipeline::createGraphicsPipeline(
+        const std::string& vertFilepath,
+        const std::string& fragFilepath,
+        const PipelineConfigInfo& configInfo) {
+        assert(
+            configInfo.pipelineLayout != VK_NULL_HANDLE &&
+            "Cannot create graphics pipeline: no pipelineLayout provided in configInfo");
+        assert(
+            configInfo.renderPass != VK_NULL_HANDLE &&
+            "Cannot create graphics pipeline: no renderPass provided in configInfo");
 
-   void LvePipeline::createGraphicPipeline(const std::string& verFilePath, const std::string & fragFilePath, const PipelineConfigInfo& configInfo)
-   {
-        auto ver = readFile(verFilePath);
-        auto frag  = readFile(fragFilePath);
-        std::cout<<"vertex shader size "<< ver.size()<<std::endl;
-        std::cout<<"frag shader size"<<frag.size()<<std::endl;
+        auto vertCode = readFile(vertFilepath);
+        auto fragCode = readFile(fragFilepath);
 
-        createShaderModule(ver, &vertShaderModule);
-        createShaderModule(frag, &fragShaderModule);
+        createShaderModule(vertCode, &vertShaderModule);
+        createShaderModule(fragCode, &fragShaderModule);
 
         VkPipelineShaderStageCreateInfo shaderStages[2];
         shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -93,31 +119,24 @@ namespace lve
             &graphicsPipeline) != VK_SUCCESS) {
             throw std::runtime_error("failed to create graphics pipeline");
         }
-   }
-
-
-    std::vector<char> LvePipeline::readFile(const std::string & filepath)
-    {
- 
-        auto targetPath = std::filesystem::current_path().string()+"\\" + filepath;
-        std::ifstream file(targetPath,std::ios::ate|std::ios::binary);
-        if(!file.is_open())
-        {
-            throw std::runtime_error("failed to openfile:"+ targetPath);
-        }
-        size_t fileSize = static_cast<size_t>(file.tellg());
-        std::vector<char> buffer(fileSize);
-
-        file.seekg(0);
-        file.read(buffer.data(),fileSize);
-        file.close();
-        return buffer;
-
     }
 
+    void LvePipeline::createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule) {
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = code.size();
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
-    void LvePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo)
-    {
+        if (vkCreateShaderModule(lveDevice.device(), &createInfo, nullptr, shaderModule) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create shader module");
+        }
+    }
+
+    void LvePipeline::bind(VkCommandBuffer commandBuffer) {
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+    }
+
+    void LvePipeline::defaultPipelineConfigInfo(PipelineConfigInfo& configInfo) {
         configInfo.inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         configInfo.inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         configInfo.inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
@@ -180,14 +199,28 @@ namespace lve
         configInfo.depthStencilInfo.front = {};  // Optional
         configInfo.depthStencilInfo.back = {};   // Optional
 
-        configInfo.dynamicStateEnables = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+        configInfo.dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
         configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
         configInfo.dynamicStateInfo.dynamicStateCount =
             static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
         configInfo.dynamicStateInfo.flags = 0;
 
-       // configInfo.bindingDescriptions = LveModel::Vertex::getBindingDescriptions();
-       // configInfo.attributeDescriptions = LveModel::Vertex::getAttributeDescriptions();
-    }  
-}
+        configInfo.bindingDescriptions = LveModel::Vertex::getBindingDescriptions();
+        configInfo.attributeDescriptions = LveModel::Vertex::getAttributeDescriptions();
+    }
+
+    void LvePipeline::enableAlphaBlending(PipelineConfigInfo& configInfo) {
+        configInfo.colorBlendAttachment.blendEnable = VK_TRUE;
+        configInfo.colorBlendAttachment.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
+            VK_COLOR_COMPONENT_A_BIT;
+        configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+        configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+    }
+
+}  // namespace lve

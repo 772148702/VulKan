@@ -30,17 +30,35 @@ namespace lve
     class LvePipeline
     {
         public:
-        LvePipeline(LveDevice& device,const std::string& verPath, const std::string& fragPath,const PipelineConfigInfo& configInfo);
-        void createShaderModule(const std::vector<char>& code,VkShaderModule * shaderModule);
-        private:
-        static std::vector<char> readFile(const std::string & filepath);
-        void createGraphicPipeline(const std::string& verFilePath, const std::string & fragFilePath,const PipelineConfigInfo& pipelineConfigureInfo);
-        void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);     
+            LvePipeline(
+                LveDevice& device,
+                const std::string& vertFilepath,
+                const std::string& fragFilepath,
+                const PipelineConfigInfo& configInfo);
+            ~LvePipeline();
 
-         LveDevice& lveDevice;
-         VkPipeline graphicsPipeline;
-         VkShaderModule vertShaderModule;
-         VkShaderModule fragShaderModule;
+            LvePipeline(const LvePipeline&) = delete;
+            LvePipeline& operator=(const LvePipeline&) = delete;
+
+            void bind(VkCommandBuffer commandBuffer);
+
+            static void defaultPipelineConfigInfo(PipelineConfigInfo& configInfo);
+            static void enableAlphaBlending(PipelineConfigInfo& configInfo);
+
+    private:
+        static std::vector<char> readFile(const std::string& filepath);
+
+        void createGraphicsPipeline(
+            const std::string& vertFilepath,
+            const std::string& fragFilepath,
+            const PipelineConfigInfo& configInfo);
+
+        void createShaderModule(const std::vector<char>& code, VkShaderModule* shaderModule);
+
+        LveDevice& lveDevice;
+        VkPipeline graphicsPipeline;
+        VkShaderModule vertShaderModule;
+        VkShaderModule fragShaderModule;
     } ; 
 } // namespace lve
  
