@@ -1,7 +1,7 @@
 #include "lve_model.hpp"
 
 #include "lve_utils.hpp"
-
+#include <filesystem>
 // libs
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -40,7 +40,9 @@ LveModel::~LveModel() {}
 std::unique_ptr<LveModel> LveModel::createModelFromFile(
     LveDevice &device, const std::string &filepath) {
   Builder builder{};
-  builder.loadModel(ENGINE_DIR + filepath);
+
+  auto path = std::filesystem::current_path().append(filepath).string();
+  builder.loadModel(path);
   return std::make_unique<LveModel>(device, builder);
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
+#include "lve_game_object.hpp"
 namespace lve {
 
 #define MAX_LIGHTS 10

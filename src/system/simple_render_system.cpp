@@ -18,11 +18,11 @@ struct SimplePushConstantData {
   glm::mat4 normalMatrix{1.f};
 };
 
-SimpleRenderSystem::SimpleRenderSystem(
-    LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
+SimpleRenderSystem::SimpleRenderSystem(LveDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout)
     : lveDevice{device} {
-  createPipelineLayout(globalSetLayout);
-  createPipeline(renderPass);
+  
+    createPipelineLayout(globalSetLayout);
+    createPipeline(renderPass);
 }
 
 SimpleRenderSystem::~SimpleRenderSystem() {
@@ -56,6 +56,7 @@ void SimpleRenderSystem::createPipeline(VkRenderPass renderPass) {
   LvePipeline::defaultPipelineConfigInfo(pipelineConfig);
   pipelineConfig.renderPass = renderPass;
   pipelineConfig.pipelineLayout = pipelineLayout;
+
   lvePipeline = std::make_unique<LvePipeline>(
       lveDevice,
       "shaders/simple_shader.vert.spv",

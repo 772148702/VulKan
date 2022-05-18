@@ -7,7 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
-
+#include <filesystem>
 #ifndef ENGINE_DIR
 #define ENGINE_DIR "../"
 #endif
@@ -30,7 +30,7 @@ namespace lve {
     }
 
     std::vector<char> LvePipeline::readFile(const std::string& filepath) {
-        std::string enginePath = ENGINE_DIR + filepath;
+        std::string enginePath =   std::filesystem::current_path().append(filepath).string();
         std::ifstream file{ enginePath, std::ios::ate | std::ios::binary };
 
         if (!file.is_open()) {
@@ -57,6 +57,8 @@ namespace lve {
         assert(
             configInfo.renderPass != VK_NULL_HANDLE &&
             "Cannot create graphics pipeline: no renderPass provided in configInfo");
+        
+
 
         auto vertCode = readFile(vertFilepath);
         auto fragCode = readFile(fragFilepath);

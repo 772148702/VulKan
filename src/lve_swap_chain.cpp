@@ -242,6 +242,7 @@ namespace lve {
 
 			VkExtent2D swapChainExtent = getSwapChainExtent();
 			VkFramebufferCreateInfo framebufferinfo = {};
+			framebufferinfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 			framebufferinfo.renderPass = renderPass;
 			framebufferinfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			framebufferinfo.pAttachments = attachments.data();
@@ -262,9 +263,9 @@ namespace lve {
 		imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
 		inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-
+		imagesInFlight.resize(imageCount(), VK_NULL_HANDLE);
 		VkSemaphoreCreateInfo semaphoreInfo = {};
-		semaphoreInfo.sType = VK_STRUCTURE_TYPE_PROTECTED_SUBMIT_INFO;
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
 		VkFenceCreateInfo fenceInfo = {};
 		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;

@@ -20,12 +20,12 @@ namespace lve
        static constexpr int HEIGHT = 600;
 
        void run();
-
+       void loadGameObjects();
        private:
            LveWindow lveWindow{ WIDTH,HEIGHT,"Hello Vulakn" };
            LveDevice lveDevice{ lveWindow };
-  
            LveRenderer lveRenderer{ lveWindow, lveDevice };
+
            std::unique_ptr<LveDescriptorPool> globalPool{};
            LveGameObject::Map gameObjects;
            //LvePipeline LvePipeline{ lveDevice, "./shaders/simple_shader.vert.spv", "./shaders/simple_shader.frag.spv" };
